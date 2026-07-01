@@ -4,7 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
-from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate, CharityProjectDB
+from app.schemas.charity_project import (
+    CharityProjectCreate,
+    CharityProjectUpdate,
+    CharityProjectDB)
 from app.services.investment import distribute_investments
 
 router = APIRouter()
@@ -98,7 +101,8 @@ async def delete_project(
         raise HTTPException(status_code=404, detail="Проект не найден")
     if project.invested_amount > 0:
         raise HTTPException(
-            status_code=400, detail="Нельзя удалить проект, в который уже инвестированы средства")
+            status_code=400,
+            detail="Нельзя удалить проект, в который уже инвестированы ср-ва")
     await session.delete(project)
     await session.commit()
     return project

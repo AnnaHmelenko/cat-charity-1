@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
-from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate, CharityProjectDB
+from app.schemas.charity_project import (
+    CharityProjectCreate,
+    CharityProjectUpdate,
+    CharityProjectDB)
 from app.services.investment import distribute_investments
 
 router = APIRouter()
