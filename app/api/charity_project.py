@@ -103,7 +103,7 @@ async def delete_project(
     if project.invested_amount > 0:
         raise HTTPException(
             status_code=400,
-            detail="Нельзя удалить проект, в который уже инвестированы средства"
+            detail="Нельзя удалить проект, в который уже инвестированы ср-ва"
         )
     await session.delete(project)
     await session.commit()
