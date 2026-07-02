@@ -1,16 +1,32 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
 from app.schemas.charity_project import (
     CharityProjectCreate,
     CharityProjectUpdate,
-    CharityProjectDB)
+    CharityProjectDB,
+)
 from app.services.investment import distribute_investments
 
 router = APIRouter()
+
+
+async def _update_full_amount(project, new_amount, session):
+    if new_amount < project.invested_amount:
+        raise HTTPException(
+            status_code=400,
+            detail="Нельзя установить сумму сбора меньше уже вложенной"
+        )
+    project.full_amount = new_amount
+    if new_amount <= project.invested_amount:
+        project.fully_invested = True
+        project.close_date = datetime.utcnow()
+    return project
 
 
 @router.post("/", response_model=CharityProjectDB)
@@ -23,7 +39,9 @@ async def create_charity_project(
     except IntegrityError as e:
         if 'UNIQUE constraint failed: charityproject.name' in str(e):
             raise HTTPException(
-                status_code=400, detail="Проект с таким именем уже существует")
+                status_code=400,
+                detail="Проект с таким именем уже существует"
+            )
         raise
     await distribute_investments(new_project, session)
     await session.refresh(new_project)
@@ -48,33 +66,13 @@ async def update_project(
         raise HTTPException(status_code=404, detail="Проект не найден")
     if project.fully_invested:
         raise HTTPException(
-            status_code=400, detail="Закрытый проект нельзя редактировать")
+            status_code=400,
+            detail="Закрытый проект нельзя редактировать"
+        )
 
-    # Обработка full_amount
     if project_in.full_amount is not None:
-        if project_in.full_amount < project.invested_amount:
-            raise HTTPException(
-                status_code=400,
-                detail="Нельзя установить сумму сбора меньше уже вложенной"
-            )
-        project.full_amount = project_in.full_amount
-        # Если новая сумма <= уже вложенной, закрываем проект
-        if project_in.full_amount <= project.invested_amount:
-            project.fully_invested = True
-            project.close_date = datetime.utcnow()
-            # Сохраняем изменения
-            try:
-                await session.commit()
-            except IntegrityError as e:
-                if 'UNIQUE constraint failed: charityproject.name' in str(e):
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Проект с таким именем уже существует")
-                raise
-            await session.refresh(project)
-            return project
+        await _update_full_amount(project, project_in.full_amount, session)
 
-    # Обновляем остальные поля (если переданы)
     if project_in.name is not None:
         project.name = project_in.name
     if project_in.description is not None:
@@ -85,7 +83,9 @@ async def update_project(
     except IntegrityError as e:
         if 'UNIQUE constraint failed: charityproject.name' in str(e):
             raise HTTPException(
-                status_code=400, detail="Проект с таким именем уже существует")
+                status_code=400,
+                detail="Проект с таким именем уже существует"
+            )
         raise
     await session.refresh(project)
     return project
@@ -102,7 +102,8 @@ async def delete_project(
     if project.invested_amount > 0:
         raise HTTPException(
             status_code=400,
-            detail="Нельзя удалить проект, в который уже инвестированы ср-ва")
+            detail="Нельзя удалить проект, в который уже инвестированы ср-ва"
+        )
     await session.delete(project)
     await session.commit()
     return project

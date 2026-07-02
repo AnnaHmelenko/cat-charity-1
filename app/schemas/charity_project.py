@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, Extra
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, Field, Extra
 
 
 class CharityProjectBase(BaseModel):
@@ -11,7 +12,7 @@ class CharityProjectBase(BaseModel):
 
 class CharityProjectCreate(CharityProjectBase):
     class Config:
-        extra = Extra.forbid   # запрещаем лишние поля
+        extra = Extra.forbid
 
 
 class CharityProjectUpdate(BaseModel):
@@ -20,7 +21,7 @@ class CharityProjectUpdate(BaseModel):
     full_amount: Optional[int] = Field(None, gt=0)
 
     class Config:
-        extra = Extra.forbid   # запрещаем лишние поля
+        extra = Extra.forbid
 
 
 class CharityProjectDB(CharityProjectBase):

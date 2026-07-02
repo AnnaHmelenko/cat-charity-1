@@ -8,7 +8,8 @@ class CRUDBase:
 
     async def get(self, obj_id: int, session: AsyncSession):
         result = await session.execute(
-            select(self.model).where(self.model.id == obj_id))
+            select(self.model).where(self.model.id == obj_id)
+        )
         return result.scalar_one_or_none()
 
     async def get_multi(self, session: AsyncSession):
