@@ -30,7 +30,7 @@ async def create_charity_project(
     await check_name_unique(project_in.name, session)
     new_project = await charity_project_crud.create(project_in, session, commit=False)
     sources = await donation_crud.get_not_fully_invested(session)
-    distribute_investments(target=new_project, sources=sources)
+    distribute_investments(target=new_project, sources=sources)   # БЕЗ await
     await session.commit()
     await session.refresh(new_project)
     return new_project

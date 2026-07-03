@@ -21,7 +21,7 @@ async def create_donation(
 ):
     new_donation = await donation_crud.create(donation_in, session, commit=False)
     sources = await charity_project_crud.get_not_fully_invested(session)
-    distribute_investments(target=new_donation, sources=sources)
+    distribute_investments(target=new_donation, sources=sources)   # БЕЗ await
     await session.commit()
     await session.refresh(new_donation)
     return new_donation
