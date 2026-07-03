@@ -1,32 +1,25 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from http import HTTPStatus
 
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
+from app.crud.donation import donation_crud
 from app.schemas.charity_project import (
     CharityProjectCreate,
     CharityProjectUpdate,
     CharityProjectDB,
 )
 from app.services.investment import distribute_investments
+from app.validators import (
+    check_project_exists,
+    check_project_not_closed,
+    check_project_not_invested,
+    check_name_unique,
+)
 
 router = APIRouter()
-
-
-async def _update_full_amount(project, new_amount, session):
-    if new_amount < project.invested_amount:
-        raise HTTPException(
-            status_code=400,
-            detail="Нельзя установить сумму сбора меньше уже вложенной"
-        )
-    project.full_amount = new_amount
-    if new_amount <= project.invested_amount:
-        project.fully_invested = True
-        project.close_date = datetime.utcnow()
-    return project
 
 
 @router.post("/", response_model=CharityProjectDB)
@@ -34,16 +27,11 @@ async def create_charity_project(
     project_in: CharityProjectCreate,
     session: AsyncSession = Depends(get_async_session),
 ):
-    try:
-        new_project = await charity_project_crud.create(project_in, session)
-    except IntegrityError as e:
-        if 'UNIQUE constraint failed: charityproject.name' in str(e):
-            raise HTTPException(
-                status_code=400,
-                detail="Проект с таким именем уже существует"
-            )
-        raise
-    await distribute_investments(new_project, session)
+    await check_name_unique(project_in.name, session)
+    new_project = await charity_project_crud.create(project_in, session, commit=False)
+    sources = await donation_crud.get_not_fully_invested(session)
+    await distribute_investments(target=new_project, sources=sources)
+    await session.commit()
     await session.refresh(new_project)
     return new_project
 
@@ -61,32 +49,26 @@ async def update_project(
     project_in: CharityProjectUpdate,
     session: AsyncSession = Depends(get_async_session),
 ):
-    project = await charity_project_crud.get(project_id, session)
-    if not project:
-        raise HTTPException(status_code=404, detail="Проект не найден")
-    if project.fully_invested:
-        raise HTTPException(
-            status_code=400,
-            detail="Закрытый проект нельзя редактировать"
-        )
+    project = await check_project_exists(project_id, session)
+    check_project_not_closed(project)
 
     if project_in.full_amount is not None:
-        await _update_full_amount(project, project_in.full_amount, session)
+        if project_in.full_amount < project.invested_amount:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Нельзя установить сумму сбора меньше уже вложенной"
+            )
+        project.full_amount = project_in.full_amount
+        if project_in.full_amount <= project.invested_amount:
+            project.close_project()
 
     if project_in.name is not None:
+        await check_name_unique(project_in.name, session, exclude_id=project_id)
         project.name = project_in.name
     if project_in.description is not None:
         project.description = project_in.description
 
-    try:
-        await session.commit()
-    except IntegrityError as e:
-        if 'UNIQUE constraint failed: charityproject.name' in str(e):
-            raise HTTPException(
-                status_code=400,
-                detail="Проект с таким именем уже существует"
-            )
-        raise
+    await session.commit()
     await session.refresh(project)
     return project
 
@@ -96,14 +78,8 @@ async def delete_project(
     project_id: int,
     session: AsyncSession = Depends(get_async_session),
 ):
-    project = await charity_project_crud.get(project_id, session)
-    if not project:
-        raise HTTPException(status_code=404, detail="Проект не найден")
-    if project.invested_amount > 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Нельзя удалить проект, в который уже инвестированы ср-ва"
-        )
+    project = await check_project_exists(project_id, session)
+    check_project_not_invested(project)
     await session.delete(project)
     await session.commit()
     return project
