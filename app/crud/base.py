@@ -18,7 +18,7 @@ class CRUDBase:
 
     async def create(self, obj_in, session: AsyncSession, commit: bool = True):
         db_obj = self.model(**obj_in.dict())
-        # Устанавливаем значения по умолчанию, чтобы избежать None
+        # Явно задаём значения по умолчанию, чтобы избежать None
         db_obj.invested_amount = 0
         db_obj.fully_invested = False
         session.add(db_obj)

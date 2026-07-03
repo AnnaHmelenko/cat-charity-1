@@ -32,15 +32,3 @@ def check_project_not_invested(project):
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Нельзя удалить проект, в который уже инвестированы средства"
         )
-
-
-async def check_name_unique(name: str, session: AsyncSession, exclude_id: int = None):
-    stmt = select(CharityProject).where(CharityProject.name == name)
-    if exclude_id is not None:
-        stmt = stmt.where(CharityProject.id != exclude_id)
-    result = await session.execute(stmt)
-    if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Проект с таким именем уже существует"
-        )

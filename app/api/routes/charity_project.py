@@ -16,7 +16,6 @@ from app.validators import (
     check_project_exists,
     check_project_not_closed,
     check_project_not_invested,
-    check_name_unique,
 )
 
 router = APIRouter()
@@ -27,11 +26,22 @@ async def create_charity_project(
     project_in: CharityProjectCreate,
     session: AsyncSession = Depends(get_async_session),
 ):
-    await check_name_unique(project_in.name, session)
-    new_project = await charity_project_crud.create(project_in, session, commit=False)
+    try:
+        new_project = await charity_project_crud.create(project_in, session, commit=False)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Проект с таким именем уже существует"
+        )
     sources = await donation_crud.get_not_fully_invested(session)
-    distribute_investments(target=new_project, sources=sources)   # БЕЗ await
-    await session.commit()
+    distribute_investments(target=new_project, sources=sources)
+    try:
+        await session.commit()
+    except IntegrityError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Проект с таким именем уже существует"
+        )
     await session.refresh(new_project)
     return new_project
 
@@ -63,12 +73,17 @@ async def update_project(
             project.close_project()
 
     if project_in.name is not None:
-        await check_name_unique(project_in.name, session, exclude_id=project_id)
         project.name = project_in.name
     if project_in.description is not None:
         project.description = project_in.description
 
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Проект с таким именем уже существует"
+        )
     await session.refresh(project)
     return project
 
