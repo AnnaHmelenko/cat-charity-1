@@ -16,22 +16,18 @@ class CRUDBase:
         result = await session.execute(select(self.model))
         return result.scalars().all()
 
-    async def create(self, obj_in, session: AsyncSession, commit: bool = True):
+    async def create(self, obj_in, session: AsyncSession):
         db_obj = self.model(**obj_in.dict())
         db_obj.invested_amount = 0
         db_obj.fully_invested = False
         session.add(db_obj)
-        if commit:
-            await session.commit()
-        return db_obj
+        return db_obj  # без commit, коммитим снаружи
 
-    async def update(self, db_obj, obj_in, session: AsyncSession, commit: bool = True):
+    async def update(self, db_obj, obj_in, session: AsyncSession):
         for field, value in obj_in.dict(exclude_unset=True).items():
             setattr(db_obj, field, value)
         session.add(db_obj)
-        if commit:
-            await session.commit()
-        return db_obj
+        return db_obj  # без commit
 
     async def get_not_fully_invested(self, session: AsyncSession):
         result = await session.execute(

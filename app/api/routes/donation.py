@@ -19,7 +19,7 @@ async def create_donation(
     donation_in: DonationCreate,
     session: AsyncSession = Depends(get_async_session),
 ):
-    new_donation = await donation_crud.create(donation_in, session, commit=False)
+    new_donation = await donation_crud.create(donation_in, session)
     sources = await charity_project_crud.get_not_fully_invested(session)
     distribute_investments(target=new_donation, sources=sources)
     await session.commit()

@@ -27,7 +27,7 @@ async def create_charity_project(
     session: AsyncSession = Depends(get_async_session),
 ):
     try:
-        new_project = await charity_project_crud.create(project_in, session, commit=False)
+        new_project = await charity_project_crud.create(project_in, session)
     except IntegrityError:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from app.core.config import settings
 from app.api.routes import charity_project, donation
 from app.core.db import engine, Base
