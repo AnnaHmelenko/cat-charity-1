@@ -18,13 +18,11 @@ class CRUDBase:
 
     async def create(self, obj_in, session: AsyncSession, commit: bool = True):
         db_obj = self.model(**obj_in.dict())
-        # Явно задаём значения по умолчанию, чтобы избежать None
         db_obj.invested_amount = 0
         db_obj.fully_invested = False
         session.add(db_obj)
         if commit:
             await session.commit()
-            await session.refresh(db_obj)
         return db_obj
 
     async def update(self, db_obj, obj_in, session: AsyncSession, commit: bool = True):
@@ -33,7 +31,6 @@ class CRUDBase:
         session.add(db_obj)
         if commit:
             await session.commit()
-            await session.refresh(db_obj)
         return db_obj
 
     async def get_not_fully_invested(self, session: AsyncSession):

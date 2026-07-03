@@ -23,7 +23,6 @@ async def create_donation(
     sources = await charity_project_crud.get_not_fully_invested(session)
     distribute_investments(target=new_donation, sources=sources)
     await session.commit()
-    await session.refresh(new_donation)
     return new_donation
 
 

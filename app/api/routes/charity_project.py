@@ -42,7 +42,6 @@ async def create_charity_project(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Проект с таким именем уже существует"
         )
-    await session.refresh(new_project)
     return new_project
 
 
@@ -84,7 +83,6 @@ async def update_project(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Проект с таким именем уже существует"
         )
-    await session.refresh(project)
     return project
 
 
