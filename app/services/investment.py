@@ -11,4 +11,3 @@ def distribute_investments(target, sources):
             source.close_project()
         if target.invested_amount == target.full_amount:
             target.close_project()
-    return target, sources
