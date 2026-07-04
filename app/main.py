@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from app.core.config import settings
+
 from app.api.routes import charity_project, donation
-from app.core.db import engine, Base
+from app.core.config import settings
+from app.core.db import Base, engine
 
 app = FastAPI(
     title=settings.app_title,
@@ -9,7 +10,7 @@ app = FastAPI(
 )
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -17,11 +18,11 @@ async def startup():
 
 app.include_router(
     charity_project.router,
-    prefix="/charity_project",
-    tags=["Проекты"]
+    prefix='/charity_project',
+    tags=['Проекты'],
 )
 app.include_router(
     donation.router,
-    prefix="/donation",
-    tags=["Пожертвования"]
+    prefix='/donation',
+    tags=['Пожертвования'],
 )

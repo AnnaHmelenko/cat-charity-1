@@ -1,19 +1,12 @@
-import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_title: str = "QRKot"
-    app_description: str = "Благотворительный фонд поддержки котиков"
-    
-    @property
-    def database_url(self) -> str:
-        if os.getenv("PYTEST_CURRENT_TEST"):
-            return "sqlite+aiosqlite:///:memory:"
-        return "sqlite+aiosqlite:///./fastapi.db"
+    app_title: str = 'QRKot'
+    app_description: str = 'Благотворительный фонд поддержки котиков'
+    database_url: str = 'sqlite+aiosqlite:///./fastapi.db'
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
 
 settings = Settings()
