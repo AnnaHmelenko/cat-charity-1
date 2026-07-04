@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, Boolean, DateTime
 from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Integer
+
 from app.core.db import Base
 
 
@@ -17,4 +19,4 @@ class BaseModel(Base):
         self.close_date = datetime.utcnow()
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} id={self.id}>"
+        return f'<{self.__class__.__name__} id={self.id}>'
