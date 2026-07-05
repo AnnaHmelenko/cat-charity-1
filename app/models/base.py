@@ -30,7 +30,8 @@ class InvestmentBase(Base):
 
         if fully_invested and invested_amount != full_amount:
             raise ValueError(
-                "fully_invested can be True only if invested_amount == full_amount"
+                "fully_invested can be True only if "
+                "invested_amount == full_amount"
             )
 
         kwargs.setdefault('invested_amount', 0)
@@ -38,7 +39,6 @@ class InvestmentBase(Base):
         super().__init__(**kwargs)
 
     def close_if_fully_invested(self):
-        """Закрывает объект, если собранная сумма равна полной."""
         if self.invested_amount == self.full_amount:
             self.fully_invested = True
             self.close_date = datetime.utcnow()
