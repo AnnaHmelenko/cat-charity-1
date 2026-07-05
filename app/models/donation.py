@@ -1,10 +1,7 @@
-from sqlalchemy import Column, Integer, Text
+from sqlalchemy import Column, Text
 
-from app.models.base import BaseModel
+from app.models.base import InvestmentBase
 
 
-class Donation(BaseModel):
-    __tablename__ = 'donation'
-
+class Donation(InvestmentBase):
     comment = Column(Text, nullable=True)
-    full_amount = Column(Integer, nullable=False)

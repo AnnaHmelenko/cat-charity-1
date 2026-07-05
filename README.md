@@ -5,8 +5,7 @@
 
 ## Автор
 
-- Хмеленко Анна
-- (https://github.com/AnnaHmelenko)
+- [Хмеленко Анна](https://github.com/AnnaHmelenko) 
 
 # Благотворительный фонд поддержки котиков QRKot
 
@@ -64,9 +63,8 @@ uvicorn app.main:app --reload
 
 После запуска документация доступна по адресам:
 
-- Swagger UI: http://localhost:8000/docs
-
-- ReDoc: http://localhost:8000/redoc
+- [Swagger UI](http://localhost:8000/docs)
+- [ReDoc](http://localhost:8000/redoc)
 
 ## Эндпоинты
 

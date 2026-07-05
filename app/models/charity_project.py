@@ -1,11 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, String, Text
 
-from app.models.base import BaseModel
+from app.models.base import InvestmentBase
 
 
-class CharityProject(BaseModel):
-    __tablename__ = 'charityproject'
-
+class CharityProject(InvestmentBase):
     name = Column(String(100), unique=True, nullable=False)
     description = Column(Text, nullable=False)
-    full_amount = Column(Integer, nullable=False)

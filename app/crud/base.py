@@ -20,8 +20,6 @@ class CRUDBase:
 
     async def create(self, obj_in, session: AsyncSession):
         db_obj = self.model(**obj_in.dict())
-        db_obj.invested_amount = 0
-        db_obj.fully_invested = False
         session.add(db_obj)
         return db_obj
 
@@ -34,9 +32,8 @@ class CRUDBase:
     async def get_not_fully_invested(self, session: AsyncSession):
         return (
             await session.execute(
-                select(self.model).where(
-                    self.model.fully_invested.is_(False),
-                    self.model.invested_amount < self.model.full_amount,
-                ).order_by(self.model.create_date)
+                select(self.model)
+                .where(self.model.fully_invested.is_(False))
+                .order_by(self.model.create_date)
             )
         ).scalars().all()

@@ -1,6 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.validators import (
+    check_full_amount_not_less_invested,
+    check_name_duplicate,
+    check_project_exists,
+    check_project_not_closed,
+    check_project_not_invested,
+)
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
 from app.crud.donation import donation_crud
@@ -10,13 +17,6 @@ from app.schemas.charity_project import (
     CharityProjectUpdate,
 )
 from app.services.investment import distribute_investments
-from app.validators import (
-    check_full_amount_not_less_invested,
-    check_name_duplicate,
-    check_project_exists,
-    check_project_not_closed,
-    check_project_not_invested,
-)
 
 router = APIRouter()
 
@@ -29,7 +29,8 @@ async def create_charity_project(
     await check_name_duplicate(project_in.name, session)
     new_project = await charity_project_crud.create(project_in, session)
     sources = await donation_crud.get_not_fully_invested(session)
-    distribute_investments(target=new_project, sources=sources)
+    changed = distribute_investments(target=new_project, sources=sources)
+    session.add_all(changed)
     await session.commit()
     await session.refresh(new_project)
     return new_project
@@ -58,8 +59,7 @@ async def update_project(
             project, project_in.full_amount
         )
         project.full_amount = project_in.full_amount
-        if project.full_amount <= project.invested_amount:
-            project.close_project()
+        project.close_project()
     if project_in.description is not None:
         project.description = project_in.description
     await session.commit()

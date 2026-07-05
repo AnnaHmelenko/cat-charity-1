@@ -1,14 +1,20 @@
-def distribute_investments(target, sources):
+from app.models.base import InvestmentBase
+
+
+def distribute_investments(
+    target: InvestmentBase,
+    sources: list[InvestmentBase],
+) -> list[InvestmentBase]:
+    changed = []
     for source in sources:
-        if target.fully_invested:
-            break
         transfer = min(
             source.full_amount - source.invested_amount,
             target.full_amount - target.invested_amount,
         )
-        source.invested_amount += transfer
-        target.invested_amount += transfer
-        if source.invested_amount == source.full_amount:
-            source.close_project()
-        if target.invested_amount == target.full_amount:
-            target.close_project()
+        for obj in (source, target):
+            obj.invested_amount += transfer
+            obj.close_project()
+        changed.append(source)
+        if target.fully_invested:
+            break
+    return changed
