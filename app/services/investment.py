@@ -13,7 +13,7 @@ def distribute_investments(
         )
         for obj in (source, target):
             obj.invested_amount += transfer
-            obj.close_project()
+            obj.close_if_fully_invested()
         changed.append(source)
         if target.fully_invested:
             break

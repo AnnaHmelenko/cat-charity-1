@@ -59,7 +59,7 @@ async def update_project(
             project, project_in.full_amount
         )
         project.full_amount = project_in.full_amount
-        project.close_project()
+        project.close_if_fully_invested()
     if project_in.description is not None:
         project.description = project_in.description
     await session.commit()
