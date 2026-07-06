@@ -21,6 +21,7 @@ class CRUDBase:
     async def create(self, obj_in, session: AsyncSession):
         db_obj = self.model(**obj_in.dict())
         session.add(db_obj)
+        await session.flush()
         return db_obj
 
     async def update(self, db_obj, obj_in, session: AsyncSession):
